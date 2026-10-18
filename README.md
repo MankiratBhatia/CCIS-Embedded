@@ -108,13 +108,5 @@ python cloud/trend_model.py   --url <FIREBASE_URL> --ef 0.71 --baseline 100
 - Measurement covers one appliance circuit, not a whole household.
 - The Firebase rules and `setInsecure()` TLS in the firmware are for demonstration only.
 
-## Team roles
-
-| Role | Owner |
-|---|---|
-| Hardware assembly | |
-| ESP32 firmware and testing | |
-| Cloud, calculations and dashboard | |
-
 ## License
 MIT
