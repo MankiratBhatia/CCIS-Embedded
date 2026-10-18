@@ -22,11 +22,7 @@
 #endif
 
 // ---------- CONFIG ----------
-const char* WIFI_SSID = "YOUR_WIFI";
-const char* WIFI_PASS = "YOUR_PASSWORD";
-// Firebase RTDB URL, e.g. https://your-project-default-rtdb.firebaseio.com
-const char* DB_URL    = "https://YOUR-PROJECT-default-rtdb.firebaseio.com";
-const char* DEVICE_ID = "ccis01";
+#include "secrets.h"   // defines WIFI_SSID, WIFI_PASS, DB_URL, DEVICE_ID (git-ignored)
 
 // ---------- PINS ----------
 #define PIN_DHT   4     // DHT22 data
