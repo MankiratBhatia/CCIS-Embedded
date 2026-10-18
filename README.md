@@ -4,7 +4,7 @@ A low-cost ESP32 sensor node that measures appliance current, air quality, tempe
 
 Course project for **BITE401P – Embedded Systems and IoT**.
 
-**Team:** Mankirat Bhatia (24BIT0048) · Nishit Jain (24BIT0068) · Aarav Jain (24BIT0023)
+**Team:** Aarav Jain (24BIT0023) · Mankirat Bhatia (24BIT0048) · Nishit Jain (24BIT0068)
 
 ## How it works
 
