@@ -1,0 +1,151 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 780" font-family="Arial, Helvetica, sans-serif">
+  <rect width="1100" height="780" fill="#ffffff"/>
+  <text x="550" y="34" text-anchor="middle" font-size="22" font-weight="bold" fill="#111">CCIS – Wiring Diagram (ESP32 DevKit V1)</text>
+  <text x="550" y="56" text-anchor="middle" font-size="12" fill="#555">Logical diagram: pin names are the labels printed on the board. All grounds are common.</text>
+
+  <!-- ===== RAILS ===== -->
+  <!-- left: 3.3V and GND -->
+  <line x1="270" y1="120" x2="270" y2="295" stroke="#f08c00" stroke-width="4"/>
+  <line x1="300" y1="190" x2="300" y2="430" stroke="#222" stroke-width="4"/>
+  <text x="270" y="108" text-anchor="middle" font-size="12" fill="#f08c00" font-weight="bold">3.3V</text>
+  <text x="300" y="448" text-anchor="middle" font-size="12" fill="#222" font-weight="bold">GND</text>
+  <!-- right: 5V and GND -->
+  <line x1="760" y1="125" x2="760" y2="610" stroke="#e03131" stroke-width="4"/>
+  <line x1="790" y1="185" x2="790" y2="630" stroke="#222" stroke-width="4"/>
+  <text x="760" y="113" text-anchor="middle" font-size="12" fill="#e03131" font-weight="bold">5V</text>
+  <text x="790" y="173" text-anchor="middle" font-size="12" fill="#222" font-weight="bold">GND</text>
+
+  <!-- ===== ESP32 ===== -->
+  <rect x="400" y="90" width="220" height="580" rx="10" fill="#e7f5ff" stroke="#1971c2" stroke-width="3"/>
+  <text x="510" y="82" text-anchor="middle" font-size="15" font-weight="bold" fill="#1971c2">ESP32 DevKit V1</text>
+  <text x="510" y="240" text-anchor="middle" font-size="13" fill="#1971c2">USB 5V / 2A</text>
+  <text x="510" y="258" text-anchor="middle" font-size="13" fill="#1971c2">power + programming</text>
+  <g font-size="12" fill="#111">
+    <text x="410" y="134">3V3</text>
+    <text x="410" y="174">GPIO4</text>
+    <text x="410" y="354">GPIO21 (SDA)</text>
+    <text x="410" y="384">GPIO22 (SCL)</text>
+    <text x="410" y="434">GND</text>
+    <text x="610" y="129" text-anchor="end">VIN (5V)</text>
+    <text x="610" y="159" text-anchor="end">GPIO27</text>
+    <text x="610" y="319" text-anchor="end">GPIO34 (ADC1)</text>
+    <text x="610" y="399" text-anchor="end">GND</text>
+    <text x="610" y="479" text-anchor="end">GPIO35 (ADC1)</text>
+    <text x="610" y="639" text-anchor="end">GPIO26</text>
+  </g>
+
+  <!-- ===== LEFT DEVICES ===== -->
+  <!-- DHT22 -->
+  <rect x="40" y="105" width="180" height="120" rx="8" fill="#fff4e6" stroke="#f08c00" stroke-width="2"/>
+  <text x="130" y="127" text-anchor="middle" font-size="14" font-weight="bold">DHT22</text>
+  <text x="130" y="145" text-anchor="middle" font-size="11" fill="#555">Temp / Humidity</text>
+  <g font-size="11"><text x="52" y="139">VCC</text><text x="52" y="174">DATA</text><text x="52" y="209">GND</text></g>
+  <line x1="220" y1="135" x2="270" y2="135" stroke="#f08c00" stroke-width="2.5"/>
+  <line x1="220" y1="170" x2="400" y2="170" stroke="#1971c2" stroke-width="2.5"/>
+  <line x1="220" y1="205" x2="300" y2="205" stroke="#222" stroke-width="2.5"/>
+  <text x="310" y="190" font-size="10" fill="#1971c2">10k pull-up to 3V3</text>
+  <!-- OLED -->
+  <rect x="40" y="252" width="180" height="163" rx="8" fill="#f3f0ff" stroke="#7048e8" stroke-width="2"/>
+  <text x="130" y="272" text-anchor="middle" font-size="14" font-weight="bold">OLED SSD1306</text>
+  <text x="130" y="287" text-anchor="middle" font-size="11" fill="#555">I2C 0x3C (optional)</text>
+  <g font-size="11"><text x="52" y="294">VCC</text><text x="52" y="324">GND</text><text x="52" y="354">SDA</text><text x="52" y="384">SCL</text></g>
+  <line x1="220" y1="290" x2="270" y2="290" stroke="#f08c00" stroke-width="2.5"/>
+  <line x1="220" y1="320" x2="300" y2="320" stroke="#222" stroke-width="2.5"/>
+  <line x1="220" y1="350" x2="400" y2="350" stroke="#7048e8" stroke-width="2.5"/>
+  <line x1="220" y1="380" x2="400" y2="380" stroke="#0ca678" stroke-width="2.5"/>
+  <line x1="400" y1="130" x2="270" y2="130" stroke="#f08c00" stroke-width="2.5"/>
+  <line x1="400" y1="430" x2="300" y2="430" stroke="#222" stroke-width="2.5"/>
+
+  <!-- ===== RIGHT DEVICES ===== -->
+  <!-- PIR -->
+  <rect x="900" y="95" width="170" height="110" rx="8" fill="#ebfbee" stroke="#2f9e44" stroke-width="2"/>
+  <text x="985" y="117" text-anchor="middle" font-size="14" font-weight="bold">PIR HC-SR501</text>
+  <text x="985" y="133" text-anchor="middle" font-size="11" fill="#555">Occupancy</text>
+  <g font-size="11"><text x="912" y="129">VCC</text><text x="912" y="159">OUT</text><text x="912" y="189">GND</text></g>
+  <line x1="620" y1="125" x2="900" y2="125" stroke="#e03131" stroke-width="2.5"/>
+  <line x1="620" y1="155" x2="900" y2="155" stroke="#2f9e44" stroke-width="2.5"/>
+  <line x1="900" y1="185" x2="790" y2="185" stroke="#222" stroke-width="2.5"/>
+  <circle cx="760" cy="125" r="4" fill="#e03131"/>
+
+  <!-- MQ-135 -->
+  <rect x="900" y="230" width="170" height="110" rx="8" fill="#fff0f6" stroke="#c2255c" stroke-width="2"/>
+  <text x="985" y="250" text-anchor="middle" font-size="14" font-weight="bold">MQ-135</text>
+  <text x="985" y="266" text-anchor="middle" font-size="11" fill="#555">Gas / air quality</text>
+  <g font-size="11"><text x="912" y="285">VCC</text><text x="912" y="305">GND</text><text x="912" y="325">AO</text></g>
+  <line x1="900" y1="280" x2="760" y2="280" stroke="#e03131" stroke-width="2.5"/>
+  <line x1="900" y1="300" x2="790" y2="300" stroke="#222" stroke-width="2.5"/>
+  <circle cx="760" cy="280" r="4" fill="#e03131"/><circle cx="790" cy="300" r="4" fill="#222"/>
+  <!-- AO -> divider -> GPIO34 -->
+  <line x1="900" y1="320" x2="740" y2="320" stroke="#c2255c" stroke-width="2.5"/>
+  <rect x="690" y="311" width="50" height="18" fill="#fff" stroke="#c2255c" stroke-width="2"/>
+  <text x="715" y="325" text-anchor="middle" font-size="10">10k</text>
+  <line x1="690" y1="320" x2="620" y2="320" stroke="#c2255c" stroke-width="2.5"/>
+  <circle cx="660" cy="320" r="4" fill="#c2255c"/>
+  <line x1="660" y1="320" x2="660" y2="340" stroke="#c2255c" stroke-width="2.5"/>
+  <rect x="651" y="340" width="18" height="40" fill="#fff" stroke="#c2255c" stroke-width="2"/>
+  <text x="660" y="364" text-anchor="middle" font-size="10">20k</text>
+  <line x1="660" y1="380" x2="660" y2="395" stroke="#222" stroke-width="2.5"/>
+  <circle cx="660" cy="395" r="4" fill="#222"/>
+
+  <!-- ACS712 -->
+  <rect x="900" y="385" width="170" height="130" rx="8" fill="#e3fafc" stroke="#0c8599" stroke-width="2"/>
+  <text x="985" y="405" text-anchor="middle" font-size="14" font-weight="bold">ACS712-20A</text>
+  <text x="985" y="421" text-anchor="middle" font-size="11" fill="#555">Current sensor</text>
+  <g font-size="11"><text x="912" y="440">VCC</text><text x="912" y="460">GND</text><text x="912" y="480">OUT</text></g>
+  <text x="985" y="503" text-anchor="middle" font-size="10" fill="#555">Load via IP+ / IP- terminals</text>
+  <line x1="900" y1="435" x2="760" y2="435" stroke="#e03131" stroke-width="2.5"/>
+  <line x1="900" y1="455" x2="790" y2="455" stroke="#222" stroke-width="2.5"/>
+  <circle cx="760" cy="435" r="4" fill="#e03131"/><circle cx="790" cy="455" r="4" fill="#222"/>
+  <line x1="900" y1="475" x2="740" y2="475" stroke="#0c8599" stroke-width="2.5"/>
+  <rect x="690" y="466" width="50" height="18" fill="#fff" stroke="#0c8599" stroke-width="2"/>
+  <text x="715" y="480" text-anchor="middle" font-size="10">10k</text>
+  <line x1="690" y1="475" x2="620" y2="475" stroke="#0c8599" stroke-width="2.5"/>
+  <circle cx="660" cy="475" r="4" fill="#0c8599"/>
+  <line x1="660" y1="475" x2="660" y2="495" stroke="#0c8599" stroke-width="2.5"/>
+  <rect x="651" y="495" width="18" height="40" fill="#fff" stroke="#0c8599" stroke-width="2"/>
+  <text x="660" y="519" text-anchor="middle" font-size="10">20k</text>
+  <line x1="660" y1="535" x2="660" y2="545" stroke="#222" stroke-width="2.5"/>
+  <line x1="650" y1="545" x2="670" y2="545" stroke="#222" stroke-width="2.5"/>
+  <line x1="654" y1="550" x2="666" y2="550" stroke="#222" stroke-width="2.5"/>
+
+  <!-- ESP GND right pin -->
+  <line x1="620" y1="395" x2="790" y2="395" stroke="#222" stroke-width="2.5"/>
+  <circle cx="790" cy="395" r="4" fill="#222"/>
+
+  <!-- Relay -->
+  <rect x="900" y="555" width="170" height="110" rx="8" fill="#fff9db" stroke="#f59f00" stroke-width="2"/>
+  <text x="985" y="575" text-anchor="middle" font-size="14" font-weight="bold">Relay module 5V</text>
+  <text x="985" y="591" text-anchor="middle" font-size="11" fill="#555">Optional actuation</text>
+  <g font-size="11"><text x="912" y="612">VCC</text><text x="912" y="632">GND</text><text x="912" y="652">IN</text></g>
+  <line x1="900" y1="610" x2="760" y2="610" stroke="#e03131" stroke-width="2.5"/>
+  <circle cx="760" cy="610" r="4" fill="#e03131"/>
+  <line x1="900" y1="630" x2="790" y2="630" stroke="#222" stroke-width="2.5"/>
+  <circle cx="790" cy="630" r="4" fill="#222"/>
+  <line x1="900" y1="650" x2="620" y2="650" stroke="#e8590c" stroke-width="2.5"/>
+  <text x="640" y="644" font-size="10" fill="#e8590c">IN (active-LOW on most modules)</text>
+
+  <!-- ===== LEGEND / NOTES ===== -->
+  <rect x="40" y="480" width="330" height="270" rx="8" fill="#f8f9fa" stroke="#adb5bd"/>
+  <text x="55" y="504" font-size="13" font-weight="bold">Important notes</text>
+  <g font-size="11" fill="#222">
+    <text x="55" y="526">1. MQ-135 AO and ACS712 OUT swing up to 5 V.</text>
+    <text x="55" y="542">   ESP32 ADC max is 3.3 V, so use the 10k + 20k</text>
+    <text x="55" y="558">   divider (output = 2/3 of input). Firmware undoes it.</text>
+    <text x="55" y="580">2. Use ADC1 pins only (GPIO32-39). ADC2 stops</text>
+    <text x="55" y="596">   working when Wi-Fi is on.</text>
+    <text x="55" y="618">3. 5V devices (PIR, MQ-135, ACS712, relay) take</text>
+    <text x="55" y="634">   5V from the ESP32 VIN pin (USB powered).</text>
+    <text x="55" y="656">4. Never put mains wiring on the breadboard.</text>
+    <text x="55" y="672">   Wire the appliance only through the ACS712</text>
+    <text x="55" y="688">   screw terminals, insulated, or use a low-voltage</text>
+    <text x="55" y="704">   DC load for the demo.</text>
+    <text x="55" y="726">5. MQ-135 needs 24-48 h burn-in; PIR needs ~30 s</text>
+    <text x="55" y="742">   warm-up after power on.</text>
+  </g>
+  <g font-size="11">
+    <rect x="400" y="700" width="14" height="4" fill="#f08c00"/><text x="420" y="705">3.3V</text>
+    <rect x="470" y="700" width="14" height="4" fill="#e03131"/><text x="490" y="705">5V</text>
+    <rect x="530" y="700" width="14" height="4" fill="#222"/><text x="550" y="705">GND</text>
+    <rect x="600" y="700" width="14" height="4" fill="#1971c2"/><text x="620" y="705">Signal</text>
+  </g>
+</svg>
