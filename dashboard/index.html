@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CCIS – Carbon Intelligence Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root { --bg:#f4f6f8; --card:#fff; --text:#1c2733; --muted:#6b7785; --line:#e1e6ec; --good:#2f9e44; --warn:#f08c00; --bad:#e03131; --accent:#1971c2; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#12171d; --card:#1b232c; --text:#e8edf2; --muted:#93a1b0; --line:#2b3642; } }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: system-ui, Segoe UI, Arial, sans-serif; background:var(--bg); color:var(--text); }
+  header { padding:16px 20px; border-bottom:1px solid var(--line); background:var(--card); }
+  header h1 { margin:0; font-size:20px; }
+  header p { margin:2px 0 0; color:var(--muted); font-size:13px; }
+  .bar { display:flex; flex-wrap:wrap; gap:10px; padding:12px 20px; align-items:end; }
+  .bar label { display:flex; flex-direction:column; font-size:11px; color:var(--muted); gap:3px; }
+  .bar input[type=text], .bar input[type=number] { padding:6px 8px; border:1px solid var(--line); border-radius:6px; background:var(--card); color:var(--text); min-width:120px; }
+  #dbUrl { min-width:320px; }
+  button { padding:8px 14px; border:0; border-radius:6px; background:var(--accent); color:#fff; cursor:pointer; font-weight:600; }
+  .chk { flex-direction:row !important; align-items:center; gap:6px !important; font-size:13px !important; color:var(--text) !important; }
+  main { padding:0 20px 30px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-bottom:14px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px; }
+  .card .k { font-size:12px; color:var(--muted); }
+  .card .v { font-size:26px; font-weight:700; margin-top:4px; }
+  .card .s { font-size:12px; color:var(--muted); margin-top:2px; }
+  .score .v { font-size:44px; }
+  .charts { display:grid; grid-template-columns:repeat(auto-fit,minmax(340px,1fr)); gap:12px; margin-bottom:14px; }
+  .chart-box { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px; height:270px; }
+  .chart-box h3 { margin:0 0 6px; font-size:13px; color:var(--muted); font-weight:600; }
+  .chart-box canvas { max-height:225px; }
+  ul#recs { margin:6px 0 0; padding-left:18px; line-height:1.6; }
+  #status { font-size:12px; color:var(--muted); padding:0 20px 8px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Cloud-Based Carbon Intelligence System (CCIS)</h1>
+  <p>Live household energy, carbon footprint and Carbon Credit Score from the ESP32 sensor node</p>
+</header>
+
+<div class="bar">
+  <label>Firebase Realtime DB URL<input type="text" id="dbUrl" placeholder="https://your-project-default-rtdb.firebaseio.com"></label>
+  <label>Device ID<input type="text" id="device" value="ccis01"></label>
+  <label>Grid factor (kg CO₂/kWh)<input type="number" id="ef" value="0.71" step="0.01"></label>
+  <label>Baseline load (W)<input type="number" id="base" value="100" step="10"></label>
+  <label class="chk"><input type="checkbox" id="demo" checked> Demo mode (simulated data)</label>
+  <button id="go">Apply</button>
+</div>
+<div id="status">Starting…</div>
+
+<main>
+  <div class="grid">
+    <div class="card score"><div class="k">Carbon Credit Score</div><div class="v" id="score">–</div><div class="s" id="grade">&nbsp;</div></div>
+    <div class="card"><div class="k">Live power</div><div class="v" id="pw">–</div><div class="s" id="cur">&nbsp;</div></div>
+    <div class="card"><div class="k">Energy (window)</div><div class="v" id="kwh">–</div><div class="s" id="idle">&nbsp;</div></div>
+    <div class="card"><div class="k">Carbon emitted (window)</div><div class="v" id="co2">–</div><div class="s" id="co2m">&nbsp;</div></div>
+    <div class="card"><div class="k">Occupancy</div><div class="v" id="occ">–</div><div class="s" id="relay">&nbsp;</div></div>
+    <div class="card"><div class="k">Temp / Humidity</div><div class="v" id="th">–</div><div class="s" id="gas">&nbsp;</div></div>
+  </div>
+
+  <div class="charts">
+    <div class="chart-box"><h3>Power (W)</h3><canvas id="cPower"></canvas></div>
+    <div class="chart-box"><h3>Temperature (°C) and humidity (%)</h3><canvas id="cTH"></canvas></div>
+    <div class="chart-box"><h3>Gas sensor (raw ADC, relative air-quality proxy)</h3><canvas id="cGas"></canvas></div>
+    <div class="chart-box"><h3>Cumulative energy (kWh) with regression fit</h3><canvas id="cKwh"></canvas></div>
+  </div>
+
+  <div class="card"><div class="k">Recommendations</div><ul id="recs"></ul></div>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+let timer = null, charts = {};
+
+// ---- settings (remembered in the browser) ----
+try { const c = JSON.parse(localStorage.getItem('ccis_cfg') || '{}');
+  for (const k of ['dbUrl','device','ef','base']) if (c[k]) $(k).value = c[k];
+  if (c.demo === false) $('demo').checked = false; } catch(e) {}
+function saveCfg() { try { localStorage.setItem('ccis_cfg', JSON.stringify({
+  dbUrl:$('dbUrl').value, device:$('device').value, ef:$('ef').value, base:$('base').value, demo:$('demo').checked })); } catch(e) {} }
+
+// ---- data sources ----
+function simulate() {                      // 120 points, 15 s apart, deterministic per time slot
+  const step = 15000, now = Math.floor(Date.now() / step) * step, rows = [];
+  for (let n = 119; n >= 0; n--) {
+    const t = now - n * step, i = Math.floor(t / step);
+    const loadOn = (i % 50) < 36;
+    const occupied = ((i / 40) | 0) % 3 !== 2;           // room empty about 1/3 of the time
+    const noise = Math.sin(i * 12.9898) * 6;
+    const power = loadOn ? 110 + noise : 2;
+    rows.push({ ts:t, temp:28 + 2*Math.sin(i/30), hum:60 + 5*Math.cos(i/20),
+      gas_raw:Math.round(1100 + 120*Math.sin(i/40) + (i % 97 < 4 ? 350 : 0)),
+      current_a:power/230, power_w:power, occupied:occupied?1:0,
+      idle_waste:(loadOn && !occupied)?1:0, relay_on:0 });
+  }
+  return rows;
+}
+async function fetchFirebase() {
+  const base = $('dbUrl').value.trim().replace(/\/$/, '');
+  if (!base) throw new Error('Enter the Firebase URL or enable demo mode');
+  const q = encodeURIComponent('"$key"');
+  const r = await fetch(`${base}/readings/${encodeURIComponent($('device').value)}.json?orderBy=${q}&limitToLast=240`);
+  if (!r.ok) throw new Error('Firebase HTTP ' + r.status + ' (check URL and database rules)');
+  const obj = await r.json();
+  return Object.values(obj || {}).filter(x => x && x.ts).sort((a, b) => a.ts - b.ts);
+}
+
+// ---- analytics (cloud-layer calculations) ----
+function analyze(rows) {
+  const ef = parseFloat($('ef').value) || 0.71, baseW = parseFloat($('base').value) || 100;
+  let kwh = 0, idle = 0; const cum = [0];
+  for (let i = 1; i < rows.length; i++) {
+    const dtH = (rows[i].ts - rows[i-1].ts) / 3.6e6;
+    const e = dtH < 5/60 ? rows[i].power_w * dtH / 1000 : 0;       // ignore gaps > 5 min
+    kwh += e; if (rows[i].idle_waste) idle += e; cum.push(kwh);
+  }
+  const hours = rows.length > 1 ? (rows[rows.length-1].ts - rows[0].ts) / 3.6e6 : 0;
+  const avgW = hours > 0 ? kwh / hours * 1000 : 0;
+  const idleRatio = kwh > 0 ? idle / kwh : 0;
+  // gas baseline = median of first 10 readings; compare with mean of last 5
+  const g = rows.map(r => r.gas_raw), first = g.slice(0, 10).sort((a,b)=>a-b);
+  const gBase = first[Math.floor(first.length/2)] || 1, gNow = g.slice(-5).reduce((a,b)=>a+b,0) / Math.min(5, g.length);
+  const gasPen = clamp(((gNow - gBase) / gBase) / 0.5, 0, 1);
+  const over = clamp((avgW - baseW) / baseW, 0, 1);
+  const score = Math.round(clamp(100 - 60*idleRatio - 25*over - 15*gasPen, 0, 100));
+  // linear regression: cumulative kWh vs hours -> slope (kW) -> 30-day projection
+  const xs = rows.map(r => (r.ts - rows[0].ts) / 3.6e6), n = xs.length;
+  const mx = xs.reduce((a,b)=>a+b,0)/n, my = cum.reduce((a,b)=>a+b,0)/n;
+  let sxy = 0, sxx = 0; for (let i = 0; i < n; i++) { sxy += (xs[i]-mx)*(cum[i]-my); sxx += (xs[i]-mx)**2; }
+  const slope = sxx > 0 ? sxy / sxx : 0, icpt = my - slope*mx;
+  const fit = xs.map(x => Math.max(0, icpt + slope*x));
+  const monthKwh = Math.max(0, slope) * 24 * 30;
+  return { ef, baseW, kwh, idle, idleRatio, avgW, co2: kwh*ef, score, gasPen, over, monthKwh, monthCo2: monthKwh*ef, cum, fit };
+}
+function recommendations(a, last) {
+  const r = [];
+  if (a.idleRatio > 0.15) r.push(`${(a.idleRatio*100).toFixed(0)}% of energy was used while the room was empty. Switch appliances off when leaving, or enable the relay auto cut-off.`);
+  if (a.over > 0.1) r.push(`Average load (${a.avgW.toFixed(0)} W) is above your baseline (${a.baseW} W). Check for high-draw appliances running longer than needed.`);
+  if (last.temp > 30 && a.avgW > a.baseW) r.push('Room temperature is high and load is above baseline. Raise the AC set point by 1–2 °C or use a fan to cut cooling energy.');
+  if (a.gasPen > 0.5) r.push('Air-quality reading has risen well above its baseline. Ventilate the room and check for combustion sources.');
+  if (a.monthCo2 > 0) r.push(`At the current rate this setup would emit about ${a.monthCo2.toFixed(1)} kg CO₂ per month.`);
+  if (a.score >= 80 && a.idleRatio < 0.1) r.push('Excellent: low idle waste and load within baseline. Keep it up.');
+  return r;
+}
+
+// ---- charts ----
+function mkChart(id, datasets, extra = {}) {
+  return new Chart($(id), { type:'line', data:{ labels:[], datasets }, options:{ animation:false, responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ display:datasets.length > 1 } }, elements:{ point:{ radius:0 }, line:{ borderWidth:2, tension:.25 } },
+    scales:{ x:{ ticks:{ maxTicksLimit:6 } }, ...extra } } });
+}
+function initCharts() {
+  charts.p = mkChart('cPower', [{ label:'Power (W)', data:[], borderColor:'#1971c2' }]);
+  charts.th = mkChart('cTH', [{ label:'Temp °C', data:[], borderColor:'#e03131' }, { label:'Humidity %', data:[], borderColor:'#2f9e44' }]);
+  charts.g = mkChart('cGas', [{ label:'MQ-135 raw', data:[], borderColor:'#c2255c' }]);
+  charts.k = mkChart('cKwh', [{ label:'Cumulative kWh', data:[], borderColor:'#0c8599' }, { label:'Linear fit', data:[], borderColor:'#f08c00', borderDash:[6,4] }]);
+}
+function setChart(c, labels, ...series) { c.data.labels = labels; series.forEach((s, i) => c.data.datasets[i].data = s); c.update(); }
+
+// ---- render ----
+function render(rows) {
+  if (rows.length < 2) { $('status').textContent = 'Waiting for data… (need at least 2 readings)'; return; }
+  const a = analyze(rows), last = rows[rows.length - 1];
+  const labels = rows.map(r => new Date(r.ts).toLocaleTimeString());
+  $('score').textContent = a.score;
+  $('score').style.color = a.score >= 75 ? 'var(--good)' : a.score >= 50 ? 'var(--warn)' : 'var(--bad)';
+  $('grade').textContent = a.score >= 75 ? 'Efficient' : a.score >= 50 ? 'Average – room to improve' : 'Wasteful';
+  $('pw').textContent = last.power_w.toFixed(0) + ' W';
+  $('cur').textContent = last.current_a.toFixed(2) + ' A';
+  $('kwh').textContent = a.kwh.toFixed(4) + ' kWh';
+  $('idle').textContent = 'Idle waste: ' + a.idle.toFixed(4) + ' kWh (' + (a.idleRatio*100).toFixed(0) + '%)';
+  $('co2').textContent = a.co2.toFixed(4) + ' kg';
+  $('co2m').textContent = 'Projected: ' + a.monthCo2.toFixed(1) + ' kg / month';
+  $('occ').textContent = last.occupied ? 'Occupied' : 'Empty';
+  $('relay').textContent = 'Relay: ' + (last.relay_on ? 'ON' : 'OFF');
+  $('th').textContent = last.temp.toFixed(1) + '° / ' + last.hum.toFixed(0) + '%';
+  $('gas').textContent = 'Gas raw: ' + last.gas_raw;
+  $('recs').innerHTML = recommendations(a, last).map(t => '<li>' + t + '</li>').join('') || '<li>No issues detected.</li>';
+  setChart(charts.p, labels, rows.map(r => r.power_w));
+  setChart(charts.th, labels, rows.map(r => r.temp), rows.map(r => r.hum));
+  setChart(charts.g, labels, rows.map(r => r.gas_raw));
+  setChart(charts.k, labels, a.cum, a.fit);
+  $('status').textContent = (document.getElementById('demo').checked ? 'DEMO data' : 'Live data') + ' · ' + rows.length + ' readings · updated ' + new Date().toLocaleTimeString();
+}
+async function tick() {
+  try { render($('demo').checked ? simulate() : await fetchFirebase()); }
+  catch (e) { $('status').textContent = 'Error: ' + e.message; }
+}
+function start() { saveCfg(); clearInterval(timer); tick(); timer = setInterval(tick, $('demo').checked ? 3000 : 5000); }
+$('go').onclick = start;
+initCharts(); start();
+</script>
+</body>
+</html>
